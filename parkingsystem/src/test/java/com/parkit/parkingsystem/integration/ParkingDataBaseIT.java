@@ -27,8 +27,10 @@ import java.sql.PreparedStatement;
 import com.parkit.parkingsystem.constants.DBConstants;
 import com.parkit.parkingsystem.constants.Fare;
 import java.sql.ResultSet;
+import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.time.ZoneId;
+// import org.junit.jupiter.api.Assertions.assertThat;
 
 
 
@@ -102,14 +104,14 @@ public class ParkingDataBaseIT {
 
     @Test
     public void testParkingLotExit() throws Exception{
-        ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.CAR,false);
+        //ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.CAR,false);
         testParkingACar();
         ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
         parkingService.processExitingVehicle();
         Connection con = null;
         con = ticketDAO.dataBaseConfig.getConnection();
         PreparedStatement ps = null;
-        ps = con.prepareStatement("select t.PARKING_NUMBER, t.ID, t.PRICE, t.IN_TIME, t.OUT_TIME, p.TYPE from ticket t,parking p where p.parking_number = t.parking_number and t.VEHICLE_REG_NUMBER=? order by t.IN_TIME DESC");
+        ps = con.prepareStatement("select t.PARKING_NUMBER, t.ID, t.PRICE, t.IN_TIME, t.OUT_TIME, p.TYPE from ticket t,parking p where p.parking_number = t.parking_number and t.VEHICLE_REG_NUMBER=? order by t.OUT_TIME DESC");
         ps.setString(1,"DHIJK");
         ResultSet rs = ps.executeQuery();
         rs.next();
@@ -122,11 +124,14 @@ public class ParkingDataBaseIT {
                 ticketDB.setInTime(rs.getTimestamp(4));
                 ticketDB.setOutTime(rs.getTimestamp(5));
         
-        Date outTime = new Date();
         
+        LocalDate outTimeValue = LocalDate.ofInstant(ticketDB.getOutTime().toInstant(), ZoneId.systemDefault());
+        LocalDate outTimeExpected = LocalDate.now();
         //verify(parkingSpotDAO, Mockito.times(1)).updateParking(any(ParkingSpot.class));
         //assertThat(outTime<ticketDAO.getTicket("DHIJK").getOutTime());
-        //assertEquals(0.00, ticketDAO.getTicket("DHIJK").getPrice());
+        //assertEquals(0.00, outTimeValue);
+        //assertTrue(outTimeExpected.isAfter(outTimeValue));
+        assertEquals(outTimeExpected,outTimeValue);
     }
 
    @Test
@@ -134,29 +139,35 @@ public class ParkingDataBaseIT {
       // test le calcul d'un prix d'un ticket via l'appel de processIncomingVehicle et processExitingVehicle  pour user recurrent
       // entrer du vehicule
       testParkingLotExit();
-      testParkingLotExit();
-      testParkingLotExit();
-      // faire un mock de intime avant 1 heure
-
-      ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
-      // when(inputReaderUtil.readSelection()).thenReturn(1);
-      // when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("DHIJK");
-	    parkingService.processIncomingVehicle();
-	    // chercher le vehicule dans la base de donnee
-	    Ticket ticket = ticketDAO.getTicket("DHIJK");
-	    // faire sortir la voiture
+      // testParkingLotExit();
+      // testParkingLotExit();
+      // recuperer le nombre de ticket
+      Date outE = new Date();
+      Connection con = null;
+      con = ticketDAO.dataBaseConfig.getConnection();
+    ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
+      PreparedStatement s = con.prepareStatement("SELECT COUNT(*) AS recordCount FROM ticket where VEHICLE_REG_NUMBER = ? and OUT_TIME < ?");
+      s.setString(1, "DHIJK");
+      s.setTimestamp(2, new Timestamp(outE.getTime()));
+      ResultSet r = s.executeQuery();
+      r.next();
+      int count = r.getInt("recordCount");
+      r.close();
+      Ticket ticketDB = new Ticket();
+      ParkingSpot parkingSpot = new ParkingSpot(2,ParkingType.CAR,false);
+      Date inTime = new Date();
+      inTime.setTime( System.currentTimeMillis() - (  120 * 60 * 1000) );
+      ticketDB.setParkingSpot(parkingSpot);
+      // ticketDB.setId(rs.getInt(2));
+      ticketDB.setVehicleRegNumber("DHIJK");
+      // ticketDB.setPrice(rs.getDouble(3));
+      ticketDB.setInTime(inTime);
+      // ticketDB.setOutTime(rs.getTimestamp(5));
+      ticketDAO.saveTicket(ticketDB);
       parkingService.processExitingVehicle();
-      // when(inputReaderUtil.readSelection()).thenReturn(1);
-      // when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("DHIJK");
-	    parkingService.processIncomingVehicle();
-      parkingService.processExitingVehicle();
-      Ticket ticketOut = ticketDAO.getTicket("DHIJK");
-      double duration = (ticketOut.getOutTime().getTime() - ticketOut.getInTime().getTime())/(1000.00*60*60);
-      double price = Fare.CAR_RATE_PER_HOUR*(duration);
-      int i = 0;
-      int countTicket = ticketDAO.getNbTicket("DHIJK");
-      //assertEquals(2, ticketDAO.getNbTicket("DHIJK")); // a faire avec 1 heure de park pour avoir la reduction
-  
+      assertTrue(1<count); // a faire avec 1 heure de park pour avoir la reduction
+      // assertEquals(ticketDAO.getTicket("DHIJK").getPrice(), 1.425);
+      assertEquals(ticketDAO.getTicket("DHIJK").getOutTime(), ticketDAO.getTicket("DHIJK").getInTime());
       
     }
 

@@ -101,7 +101,7 @@ public class ParkingService {
     public void processExitingVehicle() {
         try{
             String vehicleRegNumber = getVehichleRegNumber();
-            Ticket ticket = ticketDAO.getTicket(vehicleRegNumber);
+            Ticket ticket = ticketDAO.getTicketOut(vehicleRegNumber);
             Date outTime = new Date();
             ticket.setOutTime(outTime);
             int countTicket = ticketDAO.getNbTicket(getVehichleRegNumber());

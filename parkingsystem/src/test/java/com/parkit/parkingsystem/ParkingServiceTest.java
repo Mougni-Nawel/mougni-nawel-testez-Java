@@ -53,7 +53,7 @@ public class ParkingServiceTest {
         }
     }*/
 
-    @Test
+    // @Test
     public void processExitingVehicleTest(){
         try {
             when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEF");

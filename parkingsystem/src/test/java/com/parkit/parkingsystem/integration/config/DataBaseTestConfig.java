@@ -6,6 +6,11 @@ import org.apache.logging.log4j.Logger;
 
 import java.sql.*;
 
+/**
+ * database connection and disconnection test
+ * @author Mougni
+ *
+ */
 public class DataBaseTestConfig extends DataBaseConfig {
 
     private static final Logger logger = LogManager.getLogger("DataBaseTestConfig");
@@ -14,7 +19,7 @@ public class DataBaseTestConfig extends DataBaseConfig {
         logger.info("Create DB connection");
         Class.forName("com.mysql.cj.jdbc.Driver");
         return DriverManager.getConnection(
-                "jdbc:mysql://localhost:3306/test?serverTimezone=UTC&enabledTLSProtocols=TLSv1.2","root","codio");
+                "jdbc:mysql://localhost:3306/test?serverTimezone=UTC&enabledTLSProtocols=TLSv1.2","root",""); //codio
     }
 
     public void closeConnection(Connection con){

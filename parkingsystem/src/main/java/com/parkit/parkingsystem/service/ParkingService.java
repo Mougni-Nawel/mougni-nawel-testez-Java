@@ -11,6 +11,12 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.Date;
 
+
+/**
+ * methods related to entering and exiting a vehicle.
+ * @author Mougni
+ *
+ */
 public class ParkingService {
 
     private static final Logger logger = LogManager.getLogger("ParkingService");
@@ -21,12 +27,22 @@ public class ParkingService {
     private ParkingSpotDAO parkingSpotDAO;
     private  TicketDAO ticketDAO;
 
+    /**
+     * constructor.
+     * @param inputReaderUtil get the methods to get the input int the shell
+     * @param parkingSpotDAO represents methods related to parking slot in database
+     * @param ticketDAO represents methods related to ticket management in database
+     *
+     */
     public ParkingService(InputReaderUtil inputReaderUtil, ParkingSpotDAO parkingSpotDAO, TicketDAO ticketDAO){
         this.inputReaderUtil = inputReaderUtil;
         this.parkingSpotDAO = parkingSpotDAO;
         this.ticketDAO = ticketDAO;
     }
 
+    /**
+     * this method that create a entry ticket
+     */
     public void processIncomingVehicle() {
         try{
             System.out.println("Welcome to our parking !");
@@ -38,8 +54,6 @@ public class ParkingService {
 
                 Date inTime = new Date();
                 Ticket ticket = new Ticket();
-                //ID, PARKING_NUMBER, VEHICLE_REG_NUMBER, PRICE, IN_TIME, OUT_TIME)
-                // ticket.setId(ticketID);
                 ticket.setParkingSpot(parkingSpot);
                 ticket.setVehicleRegNumber(vehicleRegNumber);
                 ticket.setPrice(0);
@@ -55,11 +69,20 @@ public class ParkingService {
         }
     }
 
+    /**
+     * this method will retrieve the registration number inputted in the shell
+     * @return the registration number inputted in the shell in string type
+     */
     private String getVehichleRegNumber() throws Exception {
         System.out.println("Please type the vehicle registration number and press enter key");
         return inputReaderUtil.readVehicleRegistrationNumber();
     }
 
+    /**
+     * this method will get the next parking spot
+     * @return parkingSpot that represents the next parking spot in ParkingSpot type
+     * @throws an exception if parking slot is full
+     */
     public ParkingSpot getNextParkingNumberIfAvailable(){
         int parkingNumber=0;
         ParkingSpot parkingSpot = null;
@@ -79,6 +102,11 @@ public class ParkingService {
         return parkingSpot;
     }
 
+    /**
+     * this method will get the type of the vehicle inputted in the shell
+     * @return parkingType that represents the type of the vehicle
+     * @throws an IllegalArgumentException if the input is neither 1 nor 2
+     */
     private ParkingType getVehichleType(){
         System.out.println("Please select vehicle type from menu");
         System.out.println("1 CAR");
@@ -98,13 +126,16 @@ public class ParkingService {
         }
     }
 
+    /**
+     * this method represents the output of a vehicle
+     */
     public void processExitingVehicle() {
         try{
             String vehicleRegNumber = getVehichleRegNumber();
             Ticket ticket = ticketDAO.getTicketOut(vehicleRegNumber);
+            int countTicket = ticketDAO.getNbTicket(getVehichleRegNumber());
             Date outTime = new Date();
             ticket.setOutTime(outTime);
-            int countTicket = ticketDAO.getNbTicket(getVehichleRegNumber());
             if(countTicket>1){
               fareCalculatorService.calculateFare(ticket, true);
             }else{
@@ -115,7 +146,7 @@ public class ParkingService {
                 ParkingSpot parkingSpot = ticket.getParkingSpot();
                 parkingSpot.setAvailable(true);
                 parkingSpotDAO.updateParking(parkingSpot);
-                System.out.println("Please pay the parking fare:" + ticket.getPrice());
+                System.out.println("Please pay the parking fare:" + ticket.getPrice()+"le : "+ticket.getId());
                 System.out.println("Please pay time in:" + ticket.getInTime());
                 System.out.println("Please pay time out:" + ticket.getOutTime());
                 System.out.println("Recorded out-time for vehicle number:" + ticket.getVehicleRegNumber() + " is:" + outTime);

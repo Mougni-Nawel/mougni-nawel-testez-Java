@@ -17,8 +17,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.Date;
 
 import static org.mockito.Mockito.*;
-// import static org.junit.*;
 
+/**
+ * test: exit of a vehicle, entry of a vehicle, retrieve the next parking space,
+ * if the next parking space is not found, if the next parking space for a vehicle not found
+ * @author Mougni
+ *
+ */
 @ExtendWith(MockitoExtension.class)
 public class ParkingServiceTest {
 
@@ -30,28 +35,6 @@ public class ParkingServiceTest {
     private static ParkingSpotDAO parkingSpotDAO;
     @Mock
     private static TicketDAO ticketDAO;
-
-    // @BeforeEach
-    /*private void setUpPerTest() {
-        try {
-            when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEF");
-
-            ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.CAR,false);
-            Ticket ticket = new Ticket();
-            ticket.setInTime(new Date(System.currentTimeMillis() - (60*60*1000)));
-            ticket.setParkingSpot(parkingSpot);
-            ticket.setVehicleRegNumber("ABCDEF");
-            when(ticketDAO.getTicket(anyString())).thenReturn(ticket);
-            when(ticketDAO.updateTicket(any(Ticket.class))).thenReturn(true);
-
-            when(parkingSpotDAO.updateParking(any(ParkingSpot.class))).thenReturn(true);
-
-            parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw  new RuntimeException("Failed to set up test mock objects");
-        }
-    }*/
 
     // @Test
     public void processExitingVehicleTest(){
@@ -86,7 +69,6 @@ public class ParkingServiceTest {
 
       ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.CAR,false);
       parkingSpot.setId(1);
-      // parkingSpotDAO.getNextAvailableSlot(parkingType);
       when(parkingSpotDAO.getNextAvailableSlot(any(ParkingType.class))).thenReturn(1);
 		  when(parkingSpotDAO.updateParking(any(ParkingSpot.class))).thenReturn(true);
       parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
@@ -99,37 +81,18 @@ public class ParkingServiceTest {
       ticket.setInTime(inTime);
       ticket.setOutTime(null);
       parkingService.processIncomingVehicle();
-      //assertEquals(ticket, ticketDAO.getTicket("ABCDEF").getInTime());
       verify(ticketDAO, Mockito.times(1)).saveTicket(any(Ticket.class));
       verify(parkingSpotDAO, Mockito.times(1)).updateParking(any(ParkingSpot.class));
 
     }
     @Test
     public void processExitingVehicleTestUnableUpdate() throws Exception{
-        System.out.println("SORTIR:"); // a supprimer
-        // when(ticketDAO.updateTicket(any(Ticket.class))).thenReturn(false);
-        // parkingService.processExitingVehicle();
-        // // verify(parkingSpotDAO, Mockito.times(1)).updateParking(any(ParkingSpot.class));
-        // // verify(ticketDAO, Mockito.times(1)).updateTicket(any(Ticket.class));
-        // assertEquals(ticketDAO.updateTicket(any(Ticket.class)), false);
-        // FareCalcucatorService fareCalculatorService = new FareCalculatorService();
-        ParkingService parkingService = mock(ParkingService.class);
-        //when(inputReaderUtil.readSelection()).thenReturn(1);
-        //when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEF");
-        //when(ticketDAO.getTicket("ABCDEF")).thenReturn(any(Ticket.class));
-        //when(ticketDAO.getNbTicket("ABCDEF")).thenReturn(2);
-        //when(FareCalculatorService.calculateFare(any(Ticket.class), true));
-        //when(ticketDAO.updateTicket(any())).thenReturn(false);
 
-        // assertThrows(Exception.class, () -> {
-        //   ticketDAO.updateTicket(any(Ticket.class));
-        // });
+        ParkingService parkingService = mock(ParkingService.class);
         try{
         parkingService.processExitingVehicle();
-        //verify(parkingService, Mockito.times(1)).processExitingVehicle();
         verify(parkingSpotDAO, Mockito.times(0)).updateParking(any(ParkingSpot.class));
         verify(ticketDAO, Mockito.times(0)).updateTicket(any(Ticket.class));
-        // assertEquals(parkingService.processExitingVehicle());
         }catch(Exception e){
 
         }
@@ -137,8 +100,6 @@ public class ParkingServiceTest {
 
     @Test
     public void testGetNextParkingNumberIfAvailable() throws Exception{
-      // parkingService.getNextParkingNumberIfAvailable();
-      // when(parkingService.getNextParkingNumberIfAvailable()).thenReturn(1);/
       try{
         ParkingSpot parkingSpot = parkingService.getNextParkingNumberIfAvailable();
         parkingSpot.setId(1);

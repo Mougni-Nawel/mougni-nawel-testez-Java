@@ -5,11 +5,22 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.Scanner;
 
+
+/**
+ * methods collecting user input.
+ * @author Mougni
+ *
+ */
 public class InputReaderUtil {
 
     private static Scanner scan = new Scanner(System.in);
     private static final Logger logger = LogManager.getLogger("InputReaderUtil");
 
+
+    /**
+     * this method get the input on the shell for the selection of the type of the vehicle
+     * @return an int that represent the input on the shell or -1 if there is an error
+     */
     public int readSelection() {
         try {
             int input = Integer.parseInt(scan.nextLine());
@@ -21,6 +32,11 @@ public class InputReaderUtil {
         }
     }
 
+    /**
+     * this method get the input on the shell for the registration number of a vehicle
+     * @return a string that represents the registration number
+     * @throws an IllegalArgumentException if the registration number inputted is null or is empty
+     */
     public String readVehicleRegistrationNumber() throws Exception {
         try {
             String vehicleRegNumber= scan.nextLine();

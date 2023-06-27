@@ -3,6 +3,12 @@ package com.parkit.parkingsystem.model;
 import java.util.Calendar;
 import java.util.Date;
 
+
+/**
+ * represents a ticket.
+ * @author Mougni
+ *
+ */
 public class Ticket {
     private int id;
     private ParkingSpot parkingSpot;
@@ -57,5 +63,17 @@ public class Ticket {
 
     public void setOutTime(Date outTime) {
         this.outTime = outTime;
+    }
+
+    @Override
+    public String toString() {
+        return "Ticket{" +
+                "id=" + id +
+                ", parkingSpot=" + parkingSpot +
+                ", vehicleRegNumber='" + vehicleRegNumber + '\'' +
+                ", price=" + price +
+                ", inTime=" + inTime +
+                ", outTime=" + outTime +
+                '}';
     }
 }

@@ -3,8 +3,21 @@ package com.parkit.parkingsystem.service;
 import com.parkit.parkingsystem.constants.Fare;
 import com.parkit.parkingsystem.model.Ticket;
 
+
+/**
+ * methods related to fare base on time and the type of vehicle.
+ * @author Mougni
+ *
+ */
 public class FareCalculatorService {
 
+    /**
+     * this method calculate the fare of a vehicle based on the time in and exit of the ticket and if there is a discount eligible for this vehicle
+     * @param ticket represents the ticket of the vehicle
+     * @param discount represents the eligibility of a vehicle to get a discouht in type of boolean
+     * @throws IllegalArgumentException if the ticket exit time is earlier than the entry time or if the exit time is null
+     * @throws IllegalArgumentException if the parking type is neither bike or car.
+     */
         public void calculateFare(Ticket ticket, Boolean discount) throws Exception{
     	
         if( (ticket.getOutTime() == null) || (ticket.getOutTime().before(ticket.getInTime())) ){
@@ -47,7 +60,7 @@ public class FareCalculatorService {
                 }else{
                   ticket.setPrice(duration * Fare.BIKE_RATE_PER_HOUR);
                 }
-            	}else {
+            }else {
             		ticket.setPrice(0.00);
             	}
                 break;
@@ -60,6 +73,10 @@ public class FareCalculatorService {
     	
     }
 
+    /**
+     * this method call the function calculateFare to calculate the fare of a vehicle based on the time in and exit of the ticket but with the discount false for eligibility of a vehicle
+     * @param ticket represents the ticket of the vehicle
+     */
     public void calculateFare(Ticket ticket) throws Exception{
       calculateFare(ticket, false);
     }

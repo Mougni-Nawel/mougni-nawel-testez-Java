@@ -18,6 +18,17 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.function.Supplier;
 
+/**
+ * test of: calculates the price for a car without reduction, for a bike without reduction,
+ * calculates the vehicle whose type is unknown, calculates the price when the entry time is
+ * after the exit time, calculates the price when the duration spent in the parking lot is
+ * less than an hour for the car and the bike, calculates the price when the duration
+ * spent in the parking lot is more than one day, calculates the price when the duration
+ * spent in the parking lot is less than 30 minutes, calculated from the price when there
+ * is a possible reduction.
+ * @author Mougni
+ *
+ */
 public class FareCalculatorServiceTest {
     
     private static FareCalculatorService fareCalculatorService;
@@ -78,8 +89,6 @@ public class FareCalculatorServiceTest {
         ticket.setInTime(inTime);
         ticket.setOutTime(outTime);
         ticket.setParkingSpot(parkingSpot);
-//  Throwable thrown = assertThrows(IllegalArgumentException.class, () -> fareCalculatorService.calculateFare(ticket), "Unkown Parking Type");
-//     Assertions.assertEquals("Unkown Parking Type", exception.getMessage());
         assertThrows(IllegalArgumentException.class, ()->{
           fareCalculatorService.calculateFare(ticket);
         } , "Unkown Parking Type");

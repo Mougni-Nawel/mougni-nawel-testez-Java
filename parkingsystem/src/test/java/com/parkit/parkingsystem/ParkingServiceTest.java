@@ -1,10 +1,14 @@
 package com.parkit.parkingsystem;
 
+import com.parkit.parkingsystem.config.DataBaseConfig;
+import com.parkit.parkingsystem.constants.DBConstants;
 import com.parkit.parkingsystem.constants.ParkingType;
 import com.parkit.parkingsystem.dao.ParkingSpotDAO;
 import com.parkit.parkingsystem.dao.TicketDAO;
+import com.parkit.parkingsystem.integration.service.DataBasePrepareService;
 import com.parkit.parkingsystem.model.ParkingSpot;
 import com.parkit.parkingsystem.model.Ticket;
+import com.parkit.parkingsystem.service.FareCalculatorService;
 import com.parkit.parkingsystem.service.ParkingService;
 import com.parkit.parkingsystem.util.InputReaderUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,7 +17,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import static org.junit.jupiter.api.Assertions.*;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.Date;
 
 import static org.mockito.Mockito.*;
@@ -31,30 +41,83 @@ public class ParkingServiceTest {
 
     @Mock
     private static InputReaderUtil inputReaderUtil;
+
+    @Mock
+    private static FareCalculatorService fareCalculatorService;
     @Mock
     private static ParkingSpotDAO parkingSpotDAO;
     @Mock
     private static TicketDAO ticketDAO;
 
-    // @Test
+    @Mock
+    private static DataBaseConfig dataBaseConfigMock;
+
+    private static DataBaseConfig dataBaseConfig = new DataBaseConfig();
+    static Connection con;
+
+    static {
+        try {
+            con = dataBaseConfig.getConnection();
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Mock
+    private static PreparedStatement preparedStatement;
+
+    static {
+        try {
+            preparedStatement = con.prepareStatement("insert into ticket(PARKING_NUMBER, VEHICLE_REG_NUMBER, PRICE, IN_TIME, OUT_TIME) values(?,?,?,?,?)");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public ParkingServiceTest() throws SQLException, ClassNotFoundException {
+    }
+    private static DataBasePrepareService dataBasePrepareService = new DataBasePrepareService();
+
+    private static void saveTicket() {
+        Ticket ticketDB = new Ticket();
+        ParkingSpot parkingSpot = new ParkingSpot(1,ParkingType.CAR,false);
+        Date inTime = new Date();
+        inTime.setTime( System.currentTimeMillis() - (  2*60 * 60 * 1000) );
+        ticketDB.setParkingSpot(parkingSpot);
+        ticketDB.setVehicleRegNumber("DHIJK");
+        ticketDB.setInTime(inTime);
+        ticketDAO.saveTicket(ticketDB);
+    }
+
+    @Test
     public void processExitingVehicleTest(){
         try {
-            when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEF");
+            parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
+
+            when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("DHIJK");
+
+            //saveTicket();
 
             ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.CAR,false);
             Ticket ticket = new Ticket();
-            ticket.setInTime(new Date(System.currentTimeMillis() - (60*60*1000)));
+            ticket.setInTime(new Date(System.currentTimeMillis() - (120*60*1000)));
             ticket.setParkingSpot(parkingSpot);
-            ticket.setVehicleRegNumber("ABCDEF");
-            when(ticketDAO.getTicket(anyString())).thenReturn(ticket);
+            ticket.setVehicleRegNumber("DHIJK");
+            when(ticketDAO.getTicketOut(anyString())).thenReturn(ticket);
+
+            when(ticketDAO.getNbTicket(anyString())).thenReturn(0);
             when(ticketDAO.updateTicket(any(Ticket.class))).thenReturn(true);
 
             when(parkingSpotDAO.updateParking(any(ParkingSpot.class))).thenReturn(true);
 
-            parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
+
             parkingService.processExitingVehicle();
+            //System.out.println("PRIX : "+ticketDAO.getTicket("DHIJK").getPrice());
             verify(parkingSpotDAO, Mockito.times(1)).updateParking(any(ParkingSpot.class));
-            verify(ticketDAO, Mockito.times(1)).getNbTicket(anyString());
+            verify(ticketDAO, Mockito.times(1)).getNbTicket("DHIJK");
+
         } catch (Exception e) {
             e.printStackTrace();
             throw  new RuntimeException("Failed to set up test mock objects");
@@ -111,10 +174,17 @@ public class ParkingServiceTest {
     }
     @Test
     public void testGetNextParkingNumberIfAvailableParkingNumberNotFound() throws Exception{
-      ParkingSpot parkingSpot = null;
-      when(inputReaderUtil.readSelection()).thenReturn(1);
-      parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
-      assertEquals(parkingService.getNextParkingNumberIfAvailable(), null);
+        ParkingSpot parkingSpot = null;
+        when(inputReaderUtil.readSelection()).thenReturn(1);
+        parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
+        assertEquals(parkingService.getNextParkingNumberIfAvailable(), null);
+    }
+    @Test
+    public void testGetNextParkingNumberIfAvailableParkingNumberNotFoundBike() throws Exception{
+        ParkingSpot parkingSpot = null;
+        when(inputReaderUtil.readSelection()).thenReturn(2);
+        parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
+        assertEquals(parkingService.getNextParkingNumberIfAvailable(), null);
     }
 
     @Test
@@ -124,5 +194,190 @@ public class ParkingServiceTest {
       parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
       assertEquals(parkingService.getNextParkingNumberIfAvailable(), parkingSpot);
     }
+
+    // test unitaire DAO partie
+    @Test
+    public void testTicketDAOSaveTicket() throws SQLException, ClassNotFoundException {
+        //dataBasePrepareService.clearDataBaseEntries();
+        ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.CAR,false);
+        Date inTime = new Date();
+        Ticket ticket = new Ticket();
+        ticket.setParkingSpot(parkingSpot);
+        ticket.setVehicleRegNumber("ABCDEF");
+        ticket.setPrice(0);
+        ticket.setInTime(inTime);
+        ticket.setOutTime(null);
+
+        //PreparedStatement ps = con.prepareStatement("insert into ticket(PARKING_NUMBER, VEHICLE_REG_NUMBER, PRICE, IN_TIME, OUT_TIME) values(?,?,?,?,?)");
+        //when(preparedStatement.execute()).thenReturn(true);
+       //preparedStatement.setInt(1,ticket.getParkingSpot().getId());
+       //preparedStatement.setString(2, ticket.getVehicleRegNumber());
+       //preparedStatement.setDouble(3, ticket.getPrice());
+       //preparedStatement.setTimestamp(4, new Timestamp(ticket.getInTime().getTime()));
+       //preparedStatement.setTimestamp(5, (ticket.getOutTime() == null)?null: (new Timestamp(ticket.getOutTime().getTime())) );
+
+        //when(preparedStatement.execute()).thenReturn(true);
+        TicketDAO dao = new TicketDAO();
+        Boolean t = dao.saveTicket(ticket);
+
+        System.out.println(t);
+
+        Ticket ticketAdded = dao.getTicket("ABCDEF");
+
+        assertEquals(ticket.getVehicleRegNumber(), ticketAdded.getVehicleRegNumber());
+        //assertEquals(new Timestamp(ticket.getOutTime().getTime()), ticketAdded.getOutTime());
+    }
+
+   @Test
+    public void testTicketDAOGetTicket() throws SQLException, ClassNotFoundException {
+        //dataBasePrepareService.clearDataBaseEntries();
+        ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.CAR,false);
+        Date inTime = new Date();
+        Ticket ticket = new Ticket();
+        ticket.setParkingSpot(parkingSpot);
+        ticket.setVehicleRegNumber("ABCDEF");
+        ticket.setPrice(0);
+        ticket.setInTime(inTime);
+        ticket.setOutTime(null);
+
+        //PreparedStatement ps = con.prepareStatement("insert into ticket(PARKING_NUMBER, VEHICLE_REG_NUMBER, PRICE, IN_TIME, OUT_TIME) values(?,?,?,?,?)");
+        //when(preparedStatement.execute()).thenReturn(true);
+        //preparedStatement.setInt(1,ticket.getParkingSpot().getId());
+        //preparedStatement.setString(2, ticket.getVehicleRegNumber());
+        //preparedStatement.setDouble(3, ticket.getPrice());
+        //preparedStatement.setTimestamp(4, new Timestamp(ticket.getInTime().getTime()));
+        //preparedStatement.setTimestamp(5, (ticket.getOutTime() == null)?null: (new Timestamp(ticket.getOutTime().getTime())) );
+
+        //when(preparedStatement.execute()).thenReturn(true);
+       // when(dataBaseConfigMock.getConnection()).thenThrow(ClassNotFoundException.class);
+        //doThrow(ClassNotFoundException.class).when(dataBaseConfigMock)
+          //      .getConnection();
+        TicketDAO dao = new TicketDAO();
+        Boolean t = dao.saveTicket(ticket);
+
+        System.out.println(t);
+
+        Ticket ticketAdded = dao.getTicket("ADEF");
+
+        //assertEquals(null, ticketAdded);
+//       Throwable thrown = assertThrows(ClassNotFoundException.class, () -> Class.forName(anyString()));
+  //     assertEquals("", thrown.getMessage());
+        assertEquals(null, ticketAdded);
+        //assertThrows(ClassNotFoundException.class, () -> dao.getTicket("ABCDEF"));
+        //assertEquals(new Timestamp(ticket.getOutTime().getTime()), ticketAdded.getOutTime());
+    }
+
+    @Test
+    public void testTicketDaoUpdateTicket(){
+        ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.CAR,false);
+        Date inTime = new Date();
+        inTime.setTime( System.currentTimeMillis() - (  2*60 * 60 * 1000) );
+        Date outTime = new Date();
+        outTime.setTime(System.currentTimeMillis() - (  1*60 * 60 * 1000));
+        Ticket ticket = new Ticket();
+        ticket.setParkingSpot(parkingSpot);
+        ticket.setVehicleRegNumber("ABCDEF");
+        ticket.setPrice(0);
+        ticket.setInTime(inTime);
+        ticket.setOutTime(outTime);
+
+        TicketDAO dao = new TicketDAO();
+        Boolean tt = dao.saveTicket(ticket);
+        Boolean t = dao.updateTicket(ticket);
+
+        System.out.println(t);
+
+
+        Ticket ticketUpdated = dao.getTicket("ABCDEF");
+
+        assertEquals(ticket.getVehicleRegNumber(), ticketUpdated.getVehicleRegNumber());
+        assertEquals(new Timestamp(ticket.getOutTime().getDate()), new Timestamp(ticketUpdated.getOutTime().getDate()));
+    }
+
+    @Test
+    public void testTicketDaoTicketOut(){
+        dataBasePrepareService.clearDataBaseEntries();
+        ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.CAR,false);
+        Date inTime = new Date();
+        inTime.setTime( System.currentTimeMillis() - (  2*60 * 60 * 1000) );
+        //Date outTime = new Date();
+        //outTime.setTime(System.currentTimeMillis() - (  1*60 * 60 * 1000));
+        Ticket ticket = new Ticket();
+        ticket.setParkingSpot(parkingSpot);
+        ticket.setVehicleRegNumber("ABCDEF");
+        ticket.setPrice(0);
+        ticket.setInTime(inTime);
+        //ticket.setOutTime();
+
+        TicketDAO dao = new TicketDAO();
+        Boolean tt = dao.saveTicket(ticket);
+
+        Ticket ticketOut = dao.getTicketOut("ABCDEF");
+
+
+        //System.out.println(ticketOut.getVehicleRegNumber());
+
+
+        //Ticket ticketUpdated = dao.getTicket("ABCDEF");
+
+        assertEquals(ticket.getVehicleRegNumber(), ticketOut.getVehicleRegNumber());
+        assertEquals(null, ticketOut.getOutTime());
+
+    }
+
+    @Test
+    public void testTicketDaoGetNBTicket(){
+
+        dataBasePrepareService.clearDataBaseEntries();
+        ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.CAR,false);
+        Date inTime = new Date();
+        inTime.setTime( System.currentTimeMillis() - (  2*60 * 60 * 1000) );
+        Date outTime = new Date();
+        outTime.setTime(System.currentTimeMillis() - (  1*60 * 60 * 1000));
+        Ticket ticket = new Ticket();
+        ticket.setParkingSpot(parkingSpot);
+        ticket.setVehicleRegNumber("ABCDEF");
+        ticket.setPrice(0);
+        ticket.setInTime(inTime);
+        ticket.setOutTime(outTime);
+
+        TicketDAO dao = new TicketDAO();
+        Boolean t1 = dao.saveTicket(ticket);
+        Boolean t2 = dao.saveTicket(ticket);
+
+
+        int nbTicket = dao.getNbTicket("ABCDEF");
+
+
+        //System.out.println(ticketOut.getVehicleRegNumber());
+
+
+        //Ticket ticketUpdated = dao.getTicket("ABCDEF");
+
+        assertEquals(2, nbTicket);
+
+
+    }
+
+    // tests unitaire ParkingSpotDAO
+    @Test
+    public void testParkingSpotDAOGetNextAvailableSlot() throws SQLException, ClassNotFoundException {
+        dataBasePrepareService.clearDataBaseEntries();
+        ParkingSpotDAO dao = new ParkingSpotDAO();
+        int availableSlot = dao.getNextAvailableSlot(ParkingType.CAR);
+
+        assertEquals(1, availableSlot);
+    }
+
+    @Test
+    public void testParkingSpotDAOUpdateParking(){
+        ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.CAR,false);
+        ParkingSpotDAO dao = new ParkingSpotDAO();
+        boolean updatedParking = dao.updateParking(parkingSpot);
+
+        assertEquals(true, updatedParking);
+
+    }
+
 
 }

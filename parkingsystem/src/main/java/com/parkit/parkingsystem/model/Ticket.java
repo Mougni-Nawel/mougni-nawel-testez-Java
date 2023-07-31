@@ -1,5 +1,7 @@
 package com.parkit.parkingsystem.model;
 
+import com.parkit.parkingsystem.config.Generated;
+
 import java.util.Calendar;
 import java.util.Date;
 
@@ -9,6 +11,7 @@ import java.util.Date;
  * @author Mougni
  *
  */
+@Generated
 public class Ticket {
     private int id;
     private ParkingSpot parkingSpot;

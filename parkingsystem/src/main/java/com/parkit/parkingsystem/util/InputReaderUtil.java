@@ -37,7 +37,7 @@ public class InputReaderUtil {
     /**
      * this method get the input on the shell for the registration number of a vehicle
      * @return a string that represents the registration number
-     * @throws an IllegalArgumentException if the registration number inputted is null or is empty
+     * @throws IllegalArgumentException if the registration number inputted is null or is empty
      */
     public String readVehicleRegistrationNumber() throws Exception {
         try {

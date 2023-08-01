@@ -81,7 +81,7 @@ public class ParkingService {
     /**
      * this method will get the next parking spot
      * @return parkingSpot that represents the next parking spot in ParkingSpot type
-     * @throws an exception if parking slot is full
+     * @throws Exception if parking slot is full
      */
     public ParkingSpot getNextParkingNumberIfAvailable(){
         int parkingNumber=0;
@@ -105,7 +105,7 @@ public class ParkingService {
     /**
      * this method will get the type of the vehicle inputted in the shell
      * @return parkingType that represents the type of the vehicle
-     * @throws an IllegalArgumentException if the input is neither 1 nor 2
+     * @throws IllegalArgumentException if the input is neither 1 nor 2
      */
     private ParkingType getVehichleType(){
         System.out.println("Please select vehicle type from menu");

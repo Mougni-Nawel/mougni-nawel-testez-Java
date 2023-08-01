@@ -72,8 +72,6 @@ public class FareCalculatorServiceIT {
         System.out.println("inTimeExpected.isAfter(inTimeValue) " + inTimeExpected.isAfter(inTimeValue));
         assertEquals("BIKETEST", ticketDB.getVehicleRegNumber());
         assertNotNull(ticketDB.getInTime());
-        // lors de la phase d'entrée, l'horaire de sortie n'est pas renseigné
-        //assertNull(ticketDB.getOutTime());
         assertTrue(inTimeExpected.isAfter(inTimeValue));
     }
 

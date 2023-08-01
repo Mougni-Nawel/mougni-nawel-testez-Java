@@ -19,7 +19,7 @@ public class ParkingSpot {
      * constructor.
      * @param number of the parking spot
      * @param parkingType is the type of vehicle
-     * @param boolean is the availabality of the spot
+     * @param isAvailable is the availabality of the spot
      *
      */
     public ParkingSpot(int number, ParkingType parkingType, boolean isAvailable) {

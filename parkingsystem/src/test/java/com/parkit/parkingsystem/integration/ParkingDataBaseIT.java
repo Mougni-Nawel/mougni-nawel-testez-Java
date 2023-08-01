@@ -5,21 +5,14 @@ import com.parkit.parkingsystem.dao.TicketDAO;
 import com.parkit.parkingsystem.integration.config.DataBaseTestConfig;
 import com.parkit.parkingsystem.integration.service.DataBasePrepareService;
 import com.parkit.parkingsystem.service.ParkingService;
-import com.parkit.parkingsystem.service.FareCalculatorService;
 import com.parkit.parkingsystem.util.InputReaderUtil;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import com.parkit.parkingsystem.model.Ticket;
 import com.parkit.parkingsystem.model.ParkingSpot;
-
-import java.lang.annotation.Documented;
 import java.sql.*;
 import java.text.DateFormat;
 import java.time.Instant;
@@ -29,13 +22,6 @@ import com.parkit.parkingsystem.constants.ParkingType;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.parkit.parkingsystem.constants.DBConstants;
-import com.parkit.parkingsystem.constants.Fare;
-
-import java.time.LocalDateTime;
-import java.time.LocalDate;
-import java.time.ZoneId;
-// import org.junit.jupiter.api.Assertions.assertThat;
 
 
 /**
@@ -98,7 +84,6 @@ public class ParkingDataBaseIT {
         System.out.println("inTimeExpected.isAfter(inTimeValue) " + inTimeExpected.isAfter(inTimeValue));
         assertEquals("DHIJK", ticketDB.getVehicleRegNumber());
         assertNotNull(ticketDB.getInTime());
-        // lors de la phase d'entrée, l'horaire de sortie n'est pas renseigné
         assertNull(ticketDB.getOutTime());
         assertTrue(inTimeExpected.isAfter(inTimeValue));
     }
@@ -123,7 +108,6 @@ public class ParkingDataBaseIT {
         System.out.println("inTimeExpected.isAfter(inTimeValue) " + inTimeExpected.isAfter(inTimeValue));
         assertEquals("BIKETEST", ticketDB.getVehicleRegNumber());
         assertNotNull(ticketDB.getInTime());
-        // lors de la phase d'entrée, l'horaire de sortie n'est pas renseigné
         assertNull(ticketDB.getOutTime());
         assertTrue(inTimeExpected.isAfter(inTimeValue));
     }
